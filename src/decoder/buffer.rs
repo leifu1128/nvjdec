@@ -5,6 +5,7 @@ use crate::decoder::nv;
 use crate::decoder::nv::{cudaFree, cudaMemcpyKind, IntoResult, CudaResult};
 
 
+#[derive(Debug)]
 pub struct DeviceBuffer<T> {
     ptr: *mut T,
     len: usize,
@@ -12,13 +13,13 @@ pub struct DeviceBuffer<T> {
 
 impl<T> DeviceBuffer<T> {
     pub fn uninitialized(len: usize) -> CudaResult<Self> {
-        let size = len * mem::size_of::<T>();
-        let mut ptr = std::ptr::null_mut();
+        let mut devbuf = Self::default();
+        let ptr = &mut devbuf.ptr as *mut *mut c_void;
         unsafe {
-            nv::cudaMalloc(&mut ptr, size).into_result()?;
+            nv::cudaMalloc(ptr, len).into_result()?;
         }
-        let ptr = ptr as *mut T;
-        Ok(Self { ptr, len })
+        devbuf.len = len;
+        Ok(devbuf)
     }
 
     pub fn len(&self) -> usize {
@@ -44,20 +45,18 @@ impl<T> DeviceBuffer<T> {
         Self { ptr, len }
     }
 
-    pub fn copy_from(&mut self, src: &[T]) -> CudaResult<()> {
+    pub unsafe fn copy_from_slice(&mut self, src: &[T]) -> CudaResult<()> {
         assert_eq!(self.len, src.len());
 
         let src_ptr = src.as_ptr();
         let dst_ptr = self.ptr;
         let size = self.len * mem::size_of::<T>();
-        unsafe {
-            nv::cudaMemcpy(
-                dst_ptr as *mut c_void,
-                src_ptr as *const c_void,
-                size,
-                cudaMemcpyKind::cudaMemcpyHostToDevice,
-            ).into_result()?;
-        }
+        nv::cudaMemcpy(
+            dst_ptr as *mut c_void,
+            src_ptr as *const c_void,
+            size,
+            cudaMemcpyKind::cudaMemcpyHostToDevice,
+        ).into_result()?;
         Ok(())
     }
 }

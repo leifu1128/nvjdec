@@ -1,7 +1,7 @@
 use std::os::raw::c_int;
 use color_eyre::eyre::{eyre, WrapErr};
 use pyo3::prelude::*;
-use crate::decoder::image::{DeviceImage, OnDeviceFrom};
+use crate::decoder::image::{DeviceImage};
 use crate::decoder::nv::{IntoResult, Nvjpeg, nvjpegJpegState_t, NvjpegResult};
 
 

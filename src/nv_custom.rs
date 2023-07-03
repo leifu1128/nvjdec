@@ -65,3 +65,16 @@ impl IntoResult for cudaError_t {
         }
     }
 }
+
+impl nvjpegOutputFormat_t {
+    pub fn n_channels(self) -> NvjpegResult<i32> {
+        match self {
+            nvjpegOutputFormat_t::NVJPEG_OUTPUT_Y => Ok(1),
+            nvjpegOutputFormat_t::NVJPEG_OUTPUT_RGB => Ok(3),
+            nvjpegOutputFormat_t::NVJPEG_OUTPUT_BGR => Ok(3),
+            nvjpegOutputFormat_t::NVJPEG_OUTPUT_RGBI => Ok(3),
+            nvjpegOutputFormat_t::NVJPEG_OUTPUT_BGRI => Ok(3),
+            _ => return Err(eyre!("Unsupported output format")),
+        }
+    }
+}
