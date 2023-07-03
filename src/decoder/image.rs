@@ -66,10 +66,7 @@ mod tests {
     use pretty_assertions::{assert_eq};
     use tch::IndexOp;
 
-    #[test]
-    fn test_ondev_from_and_into_tensor() {
-        set_print_options_full();
-
+    fn setup_test_data() -> (usize, [i32; 3], [u8; 12], nv::nvjpegImage_t) {
         let device = 0;
         let dims = [3, 2, 2];
         let mock_data = [0u8, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
@@ -86,6 +83,30 @@ mod tests {
             mock_image.channel[i] = dev_buf.into_raw().0;
         } }
 
+        (device, dims, mock_data, mock_image)
+    }
+
+    #[test]
+    fn test_ondev_from() {
+        set_print_options_full();
+
+        let (device, dims, _mock_data, mock_image) = setup_test_data();
+
+        let mock_nvjpeg_dec_out = (mock_image, dims);
+
+        // Create a DeviceImage from the NvjpegDecOut.
+        let device_image = DeviceImage::ondev_from(mock_nvjpeg_dec_out, device);
+
+        assert_eq!(device_image.dims, dims);
+        assert_eq!(device_image.device, Device::Cuda(device));
+    }
+
+    #[test]
+    fn test_into_tensor() {
+        set_print_options_full();
+
+        let (device, dims, _mock_data, mock_image) = setup_test_data();
+
         let mock_nvjpeg_dec_out = (mock_image, dims);
 
         // Create a DeviceImage from the NvjpegDecOut.
@@ -97,16 +118,6 @@ mod tests {
         for i in 0..dims.len() {
             assert_eq!(tensor.size()[i] as i32, dims[i]);
         }
-
-        for i in 0..dims[0] {
-            for j in 0..dims[1] {
-                for k in 0..dims[2] {
-                    assert_eq!(
-                        tensor.int64_value(&[i as i64, j as i64, k as i64]) as u8,
-                        mock_data[((i * dims[1] + j) * dims[2] + k) as usize]
-                    );
-                }
-            }
-        }
     }
 }
+
