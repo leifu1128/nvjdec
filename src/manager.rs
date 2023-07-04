@@ -82,7 +82,6 @@ impl<D: Decode> Drop for Manager<D> {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -92,38 +91,34 @@ mod tests {
     use tch::IndexOp;
     use crate::decoder::nv;
 
-    #[test]
-    fn test_initialize() {
+    fn setup_manager() -> Manager<MockDecoder> {
         let backend = nv::nvjpegBackend_t::NVJPEG_BACKEND_DEFAULT;
         let device = 0;
         let flag = 0;
 
-        let manager = Manager::initialize(backend, device, flag).unwrap();
+        Manager::initialize(backend, device, flag).unwrap()
+    }
+
+    #[test]
+    fn test_initialize() {
+        let manager = setup_manager();
 
         assert!(manager.handle.is_null());
         assert!(manager.state.is_null());
-        assert_eq!(manager.device, device);
+        assert_eq!(manager.device, 0);
         assert!(manager.decoder.is_none());
     }
 
     #[test]
     fn test_set_device() {
-        let backend = nv::nvjpegBackend_t::NVJPEG_BACKEND_DEFAULT;
-        let device = 0;
-        let flag = 0;
-
-        let manager = Manager::initialize(backend, device, flag).unwrap();
+        let manager = setup_manager();
 
         assert!(manager.set_device().is_ok());
     }
 
     #[test]
     fn test_set_decoder() {
-        let backend = nv::nvjpegBackend_t::NVJPEG_BACKEND_DEFAULT;
-        let device = 0;
-        let flag = 0;
-
-        let mut manager = Manager::initialize(backend, device, flag).unwrap();
+        let mut manager = setup_manager();
 
         let decoder = MockDecoder::new();
 
@@ -133,11 +128,7 @@ mod tests {
 
     #[test]
     fn test_decode() {
-        let backend = nv::nvjpegBackend_t::NVJPEG_BACKEND_DEFAULT;
-        let device = 0;
-        let flag = 0;
-
-        let mut manager = Manager::initialize(backend, device, flag).unwrap();
+        let mut manager = setup_manager();
 
         let decoder = MockDecoder::new();
         manager.set_decoder(decoder).unwrap();
@@ -149,11 +140,7 @@ mod tests {
 
     #[test]
     fn test_teardown() {
-        let backend = nv::nvjpegBackend_t::NVJPEG_BACKEND_DEFAULT;
-        let device = 0;
-        let flag = 0;
-
-        let mut manager = Manager::initialize(backend, device, flag).unwrap();
+        let mut manager = setup_manager();
 
         assert!(manager.teardown().is_ok());
     }
