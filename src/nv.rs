@@ -6472,7 +6472,7 @@ impl Default for nvjpegPinnedAllocatorV2_t {
 pub struct nvjpegHandle {
     _unused: [u8; 0],
 }
-pub type Nvjpeg = *mut nvjpegHandle;
+pub type nvjpegHandle_t = *mut nvjpegHandle;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct nvjpegJpegState {
@@ -7819,46 +7819,46 @@ extern "C" {
     pub fn nvjpegCreate(
         backend: nvjpegBackend_t,
         dev_allocator: *mut nvjpegDevAllocator_t,
-        handle: *mut Nvjpeg,
+        handle: *mut nvjpegHandle_t,
     ) -> nvjpegStatus_t;
-    pub fn nvjpegCreateSimple(handle: *mut Nvjpeg) -> nvjpegStatus_t;
+    pub fn nvjpegCreateSimple(handle: *mut nvjpegHandle_t) -> nvjpegStatus_t;
     pub fn nvjpegCreateEx(
         backend: nvjpegBackend_t,
         dev_allocator: *mut nvjpegDevAllocator_t,
         pinned_allocator: *mut nvjpegPinnedAllocator_t,
         flags: ::std::os::raw::c_uint,
-        handle: *mut Nvjpeg,
+        handle: *mut nvjpegHandle_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegCreateExV2(
         backend: nvjpegBackend_t,
         dev_allocator: *mut nvjpegDevAllocatorV2_t,
         pinned_allocator: *mut nvjpegPinnedAllocatorV2_t,
         flags: ::std::os::raw::c_uint,
-        handle: *mut Nvjpeg,
+        handle: *mut nvjpegHandle_t,
     ) -> nvjpegStatus_t;
-    pub fn nvjpegDestroy(handle: Nvjpeg) -> nvjpegStatus_t;
-    pub fn nvjpegSetDeviceMemoryPadding(padding: usize, handle: Nvjpeg) -> nvjpegStatus_t;
+    pub fn nvjpegDestroy(handle: nvjpegHandle_t) -> nvjpegStatus_t;
+    pub fn nvjpegSetDeviceMemoryPadding(padding: usize, handle: nvjpegHandle_t) -> nvjpegStatus_t;
     pub fn nvjpegGetDeviceMemoryPadding(
         padding: *mut usize,
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
     ) -> nvjpegStatus_t;
-    pub fn nvjpegSetPinnedMemoryPadding(padding: usize, handle: Nvjpeg) -> nvjpegStatus_t;
+    pub fn nvjpegSetPinnedMemoryPadding(padding: usize, handle: nvjpegHandle_t) -> nvjpegStatus_t;
     pub fn nvjpegGetPinnedMemoryPadding(
         padding: *mut usize,
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegGetHardwareDecoderInfo(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         num_engines: *mut ::std::os::raw::c_uint,
         num_cores_per_engine: *mut ::std::os::raw::c_uint,
     ) -> nvjpegStatus_t;
     pub fn nvjpegJpegStateCreate(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         jpeg_handle: *mut nvjpegJpegState_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegJpegStateDestroy(jpeg_handle: nvjpegJpegState_t) -> nvjpegStatus_t;
     pub fn nvjpegGetImageInfo(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         data: *const ::std::os::raw::c_uchar,
         length: usize,
         nComponents: *mut ::std::os::raw::c_int,
@@ -7867,7 +7867,7 @@ extern "C" {
         heights: *mut ::std::os::raw::c_int,
     ) -> nvjpegStatus_t;
     pub fn nvjpegDecode(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         jpeg_handle: nvjpegJpegState_t,
         data: *const ::std::os::raw::c_uchar,
         length: usize,
@@ -7876,14 +7876,14 @@ extern "C" {
         stream: cudaStream_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegDecodeBatchedInitialize(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         jpeg_handle: nvjpegJpegState_t,
         batch_size: ::std::os::raw::c_int,
         max_cpu_threads: ::std::os::raw::c_int,
         output_format: nvjpegOutputFormat_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegDecodeBatched(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         jpeg_handle: nvjpegJpegState_t,
         data: *const *const ::std::os::raw::c_uchar,
         lengths: *const usize,
@@ -7891,7 +7891,7 @@ extern "C" {
         stream: cudaStream_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegDecodeBatchedPreAllocate(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         jpeg_handle: nvjpegJpegState_t,
         batch_size: ::std::os::raw::c_int,
         width: ::std::os::raw::c_int,
@@ -7900,19 +7900,19 @@ extern "C" {
         output_format: nvjpegOutputFormat_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegDecodeBatchedParseJpegTables(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         jpeg_handle: nvjpegJpegState_t,
         data: *const ::std::os::raw::c_uchar,
         length: usize,
     ) -> nvjpegStatus_t;
     pub fn nvjpegEncoderStateCreate(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         encoder_state: *mut nvjpegEncoderState_t,
         stream: cudaStream_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegEncoderStateDestroy(encoder_state: nvjpegEncoderState_t) -> nvjpegStatus_t;
     pub fn nvjpegEncoderParamsCreate(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         encoder_params: *mut nvjpegEncoderParams_t,
         stream: cudaStream_t,
     ) -> nvjpegStatus_t;
@@ -7938,14 +7938,14 @@ extern "C" {
         stream: cudaStream_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegEncodeGetBufferSize(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         encoder_params: nvjpegEncoderParams_t,
         image_width: ::std::os::raw::c_int,
         image_height: ::std::os::raw::c_int,
         max_stream_length: *mut usize,
     ) -> nvjpegStatus_t;
     pub fn nvjpegEncodeYUV(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         encoder_state: nvjpegEncoderState_t,
         encoder_params: nvjpegEncoderParams_t,
         source: *const nvjpegImage_t,
@@ -7955,7 +7955,7 @@ extern "C" {
         stream: cudaStream_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegEncodeImage(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         encoder_state: nvjpegEncoderState_t,
         encoder_params: nvjpegEncoderParams_t,
         source: *const nvjpegImage_t,
@@ -7965,37 +7965,37 @@ extern "C" {
         stream: cudaStream_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegEncodeRetrieveBitstreamDevice(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         encoder_state: nvjpegEncoderState_t,
         data: *mut ::std::os::raw::c_uchar,
         length: *mut usize,
         stream: cudaStream_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegEncodeRetrieveBitstream(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         encoder_state: nvjpegEncoderState_t,
         data: *mut ::std::os::raw::c_uchar,
         length: *mut usize,
         stream: cudaStream_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegBufferPinnedCreate(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         pinned_allocator: *mut nvjpegPinnedAllocator_t,
         buffer: *mut nvjpegBufferPinned_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegBufferPinnedCreateV2(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         pinned_allocator: *mut nvjpegPinnedAllocatorV2_t,
         buffer: *mut nvjpegBufferPinned_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegBufferPinnedDestroy(buffer: nvjpegBufferPinned_t) -> nvjpegStatus_t;
     pub fn nvjpegBufferDeviceCreate(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         device_allocator: *mut nvjpegDevAllocator_t,
         buffer: *mut nvjpegBufferDevice_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegBufferDeviceCreateV2(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         device_allocator: *mut nvjpegDevAllocatorV2_t,
         buffer: *mut nvjpegBufferDevice_t,
     ) -> nvjpegStatus_t;
@@ -8019,12 +8019,12 @@ extern "C" {
         device_buffer: nvjpegBufferDevice_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegJpegStreamCreate(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         jpeg_stream: *mut nvjpegJpegStream_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegJpegStreamDestroy(jpeg_stream: nvjpegJpegStream_t) -> nvjpegStatus_t;
     pub fn nvjpegJpegStreamParse(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         data: *const ::std::os::raw::c_uchar,
         length: usize,
         save_metadata: ::std::os::raw::c_int,
@@ -8032,13 +8032,13 @@ extern "C" {
         jpeg_stream: nvjpegJpegStream_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegJpegStreamParseHeader(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         data: *const ::std::os::raw::c_uchar,
         length: usize,
         jpeg_stream: nvjpegJpegStream_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegJpegStreamParseTables(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         data: *const ::std::os::raw::c_uchar,
         length: usize,
         jpeg_stream: nvjpegJpegStream_t,
@@ -8071,7 +8071,7 @@ extern "C" {
         chroma_subsampling: *mut nvjpegChromaSubsampling_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegDecodeParamsCreate(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         decode_params: *mut nvjpegDecodeParams_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegDecodeParamsDestroy(decode_params: nvjpegDecodeParams_t) -> nvjpegStatus_t;
@@ -8099,7 +8099,7 @@ extern "C" {
         orientation: nvjpegExifOrientation_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegDecoderCreate(
-        nvjpeg_handle: Nvjpeg,
+        nvjpeg_handle: nvjpegHandle_t,
         implementation: nvjpegBackend_t,
         decoder_handle: *mut nvjpegJpegDecoder_t,
     ) -> nvjpegStatus_t;
@@ -8111,23 +8111,23 @@ extern "C" {
         is_supported: *mut ::std::os::raw::c_int,
     ) -> nvjpegStatus_t;
     pub fn nvjpegDecodeBatchedSupported(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         jpeg_stream: nvjpegJpegStream_t,
         is_supported: *mut ::std::os::raw::c_int,
     ) -> nvjpegStatus_t;
     pub fn nvjpegDecodeBatchedSupportedEx(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         jpeg_stream: nvjpegJpegStream_t,
         decode_params: nvjpegDecodeParams_t,
         is_supported: *mut ::std::os::raw::c_int,
     ) -> nvjpegStatus_t;
     pub fn nvjpegDecoderStateCreate(
-        nvjpeg_handle: Nvjpeg,
+        nvjpeg_handle: nvjpegHandle_t,
         decoder_handle: nvjpegJpegDecoder_t,
         decoder_state: *mut nvjpegJpegState_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegDecodeJpeg(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         decoder: nvjpegJpegDecoder_t,
         decoder_state: nvjpegJpegState_t,
         jpeg_bitstream: nvjpegJpegStream_t,
@@ -8136,28 +8136,28 @@ extern "C" {
         stream: cudaStream_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegDecodeJpegHost(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         decoder: nvjpegJpegDecoder_t,
         decoder_state: nvjpegJpegState_t,
         decode_params: nvjpegDecodeParams_t,
         jpeg_stream: nvjpegJpegStream_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegDecodeJpegTransferToDevice(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         decoder: nvjpegJpegDecoder_t,
         decoder_state: nvjpegJpegState_t,
         jpeg_stream: nvjpegJpegStream_t,
         stream: cudaStream_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegDecodeJpegDevice(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         decoder: nvjpegJpegDecoder_t,
         decoder_state: nvjpegJpegState_t,
         destination: *mut nvjpegImage_t,
         stream: cudaStream_t,
     ) -> nvjpegStatus_t;
     pub fn nvjpegDecodeBatchedEx(
-        handle: Nvjpeg,
+        handle: nvjpegHandle_t,
         jpeg_handle: nvjpegJpegState_t,
         data: *const *const ::std::os::raw::c_uchar,
         lengths: *const usize,
@@ -8187,42 +8187,9 @@ extern "C" {
 use color_eyre::eyre::eyre;
 use color_eyre::Result;
 
-pub struct NvjpegHandle(pub(crate) Nvjpeg);
-pub struct NvjpegJpegState(pub(crate) nvjpegJpegState_t);
-pub struct CudaStream(pub(crate) cudaStream_t);
-
-impl Default for NvjpegHandle {
-    fn default() -> Self {
-        Self(std::ptr::null_mut())
-    }
-}
-
-impl Default for NvjpegJpegState {
-    fn default() -> Self {
-        Self(std::ptr::null_mut())
-    }
-}
-
-impl Default for CudaStream {
-    fn default() -> Self {
-        Self(std::ptr::null_mut())
-    }
-}
-
 impl Default for nvjpegBackend_t {
     fn default() -> Self {
         nvjpegBackend_t::NVJPEG_BACKEND_DEFAULT
-    }
-}
-
-impl nvjpegBackend_t {
-    pub(crate) fn get_flag(&self) -> u32 {
-        match self {
-            nvjpegBackend_t::NVJPEG_BACKEND_HARDWARE => NVJPEG_FLAGS_HW_DECODE_NO_PIPELINE,
-            nvjpegBackend_t::NVJPEG_BACKEND_GPU_HYBRID_DEVICE => NVJPEG_FLAGS_HW_DECODE_NO_PIPELINE,
-            nvjpegBackend_t::NVJPEG_BACKEND_HARDWARE_DEVICE => NVJPEG_FLAGS_HW_DECODE_NO_PIPELINE,
-            _ => NVJPEG_FLAGS_DEFAULT,
-        }
     }
 }
 

@@ -1,9 +1,10 @@
 use pyo3::{PyObject, PyResult};
 
 mod decoder;
+mod allocators;
+pub(crate) mod nv;
 
-
-
+/*
 #[pyclass(unsendable)]
 struct PyDecoder {
     decoder: Decoder,
@@ -29,6 +30,7 @@ impl PyDecoder {
     }
 
     fn decode(&self, images: Vec<Vec<u8>>) -> PyResult<PyObject> {
-        todo!()
+
     }
 }
+*/

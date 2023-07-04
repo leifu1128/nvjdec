@@ -30,14 +30,14 @@ impl DeviceImage {
         Ok(DeviceImage { channels, format, width, height, device })
     }
 
-    pub fn get_strides(&self) -> NvjpegResult<&[i32]> {
+    pub fn get_strides(&self) -> NvjpegResult<Vec<i32>> {
         let (h, w) = (self.height, self.width);
         match self.format {
-            nvjpegOutputFormat_t::NVJPEG_OUTPUT_Y => Ok(&[w, 1, 1]),
+            nvjpegOutputFormat_t::NVJPEG_OUTPUT_Y => Ok(vec![w, 1, 1]),
             nvjpegOutputFormat_t::NVJPEG_OUTPUT_RGB |
-            nvjpegOutputFormat_t::NVJPEG_OUTPUT_BGR => Ok(&[h * w, w, 1]),
+            nvjpegOutputFormat_t::NVJPEG_OUTPUT_BGR => Ok(vec![h * w, w, 1]),
             nvjpegOutputFormat_t::NVJPEG_OUTPUT_RGBI |
-            nvjpegOutputFormat_t::NVJPEG_OUTPUT_BGRI => Ok(&[3, 3 * w, 1]),
+            nvjpegOutputFormat_t::NVJPEG_OUTPUT_BGRI => Ok(vec![3, 3 * w, 1]),
             _ => return Err(eyre!("Unsupported output format"))
         }
     }
@@ -74,13 +74,13 @@ impl TryInto<Tensor> for DeviceImage {
     fn try_into(self) -> Result<Tensor> {
         let (h, w) = (self.height, self.width);
         let c = self.format.n_channels()?;
+        let strides: Vec<i64> = self.get_strides()?.into_iter().map(|x| x as i64).collect();
         let (ptr, _len) = self.channels.into_raw();
-        let strides: Vec<i64> = self.get_strides()?.iter().map(|&x| x as i64).collect();
         unsafe {
             Tensor::f_from_blob(
                 ptr,
                 &[c as i64, h as i64, w as i64],
-                &strides,
+                strides.as_slice(),
                 Kind::Uint8,
                 Device::Cuda(self.device as usize),
             ).wrap_err("Failed to create tensor")

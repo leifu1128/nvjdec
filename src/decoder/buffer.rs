@@ -13,13 +13,14 @@ pub struct DeviceBuffer<T> {
 
 impl<T> DeviceBuffer<T> {
     pub fn uninitialized(len: usize) -> CudaResult<Self> {
-        let mut devbuf = Self::default();
-        let ptr = &mut devbuf.ptr as *mut *mut c_void;
+        let mut ptr: *mut T = std::ptr::null_mut();
+        let bytes = len * std::mem::size_of::<T>();
+        let mut c_ptr: *mut c_void = ptr as *mut c_void;
         unsafe {
-            nv::cudaMalloc(ptr, len).into_result()?;
+            nv::cudaMalloc(&mut c_ptr, bytes).into_result()?;
         }
-        devbuf.len = len;
-        Ok(devbuf)
+        ptr = c_ptr as *mut T;
+        Ok(DeviceBuffer { ptr, len })
     }
 
     pub fn len(&self) -> usize {
@@ -45,18 +46,20 @@ impl<T> DeviceBuffer<T> {
         Self { ptr, len }
     }
 
-    pub unsafe fn copy_from_slice(&mut self, src: &[T]) -> CudaResult<()> {
+    pub fn copy_from_host_slice(&mut self, src: &[T]) -> CudaResult<()> {
         assert_eq!(self.len, src.len());
 
         let src_ptr = src.as_ptr();
         let dst_ptr = self.ptr;
         let size = self.len * mem::size_of::<T>();
-        nv::cudaMemcpy(
-            dst_ptr as *mut c_void,
-            src_ptr as *const c_void,
-            size,
-            cudaMemcpyKind::cudaMemcpyHostToDevice,
-        ).into_result()?;
+        unsafe{
+            nv::cudaMemcpy(
+                dst_ptr as *mut c_void,
+                src_ptr as *const c_void,
+                size,
+                cudaMemcpyKind::cudaMemcpyHostToDevice,
+            ).into_result()?;
+        }
         Ok(())
     }
 }

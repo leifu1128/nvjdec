@@ -54,7 +54,7 @@ fn main() {
     println!("cargo:rerun-if-changed=src/decoder.rs");
     println!("cargo:rerun-if-changed=src/nv_custom.rs");
 
-    println!("cargo:rustc-link-search={}/lib/x64", env::var("CUDA_PATH_V11_8").unwrap());
+    println!("cargo:rustc-link-search={}/lib/x64", env::var("CUDA_PATH").unwrap());
     println!("cargo:rustc-link-lib=dylib=cudart");
     println!("cargo:rustc-link-lib=dylib=nvjpeg");
 }
