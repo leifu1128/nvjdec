@@ -18,8 +18,8 @@ impl<D: Decode> Manager<D> {
             handle: std::ptr::null_mut(),
             state: std::ptr::null_mut(),
             device,
-			decoder: None,
-		};
+            decoder: None,
+        };
         unsafe {
             nv::cudaSetDevice(device as c_int).into_result()
                 .wrap_err("Failed to set device")?;
@@ -40,23 +40,23 @@ impl<D: Decode> Manager<D> {
         Ok(mngr)
     }
 
-	pub fn set_device(&self) -> NvjpegResult<()> {
-		unsafe {
-			nv::cudaSetDevice(self.device as c_int).into_result()
-				.wrap_err("Failed to set device")?;
-		}
-		Ok(())
-	}
+    pub fn set_device(&self) -> NvjpegResult<()> {
+        unsafe {
+            nv::cudaSetDevice(self.device as c_int).into_result()
+                .wrap_err("Failed to set device")?;
+        }
+        Ok(())
+    }
 
-	pub fn set_decoder(&mut self, mut decoder: D) -> NvjpegResult<()> {
-		self.set_device()?;
+    pub fn set_decoder(&mut self, mut decoder: D) -> NvjpegResult<()> {
+        self.set_device()?;
         decoder.init(self.handle, self.state)?;
         self.decoder = Some(decoder);
         Ok(())
     }
 
-	pub fn decode(&mut self, input: D::Input<'_>) -> NvjpegResult<D::Output> {
-		self.set_device()?;
+    pub fn decode(&mut self, input: D::Input<'_>) -> NvjpegResult<D::Output> {
+        self.set_device()?;
         match &self.decoder {
             Some(decoder) => decoder.decode(input, self.handle, self.state),
             None => Err(eyre!("No decoder set")),
@@ -64,7 +64,7 @@ impl<D: Decode> Manager<D> {
     }
 
     fn teardown(&mut self) -> NvjpegResult<()> {
-		self.set_device()?;
+        self.set_device()?;
         unsafe{
             nv::nvjpegDestroy(self.handle).into_result()
                 .wrap_err("Failed to destroy handle")?;
@@ -81,3 +81,68 @@ impl<D: Decode> Drop for Manager<D> {
             .wrap_err("Failed to teardown decoder").unwrap();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::mem::size_of;
+    use tch::display::set_print_options_full;
+    use pretty_assertions::{assert_eq};
+    use tch::IndexOp;
+    use crate::decoder::nv;
+
+    fn setup_manager() -> Manager<MockDecoder> {
+        let backend = nv::nvjpegBackend_t::NVJPEG_BACKEND_DEFAULT;
+        let device = 0;
+        let flag = 0;
+
+        Manager::initialize(backend, device, flag).unwrap()
+    }
+
+    #[test]
+    fn test_initialize() {
+        let manager = setup_manager();
+
+        assert!(manager.handle.is_null());
+        assert!(manager.state.is_null());
+        assert_eq!(manager.device, 0);
+        assert!(manager.decoder.is_none());
+    }
+
+    #[test]
+    fn test_set_device() {
+        let manager = setup_manager();
+
+        assert!(manager.set_device().is_ok());
+    }
+
+    #[test]
+    fn test_set_decoder() {
+        let mut manager = setup_manager();
+
+        let decoder = MockDecoder::new();
+
+        assert!(manager.set_decoder(decoder).is_ok());
+        assert!(manager.decoder.is_some());
+    }
+
+    #[test]
+    fn test_decode() {
+        let mut manager = setup_manager();
+
+        let decoder = MockDecoder::new();
+        manager.set_decoder(decoder).unwrap();
+
+        let input = MockInput::new();
+
+        assert!(manager.decode(input).is_ok());
+    }
+
+    #[test]
+    fn test_teardown() {
+        let mut manager = setup_manager();
+
+        assert!(manager.teardown().is_ok());
+    }
+}
+
