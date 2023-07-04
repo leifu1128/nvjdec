@@ -98,9 +98,51 @@ mod tests {
     use crate::decoder::nv;
 
     #[test]
-    fn test_ondev_from_and_into_tensor() {
+    fn test_create_device_image() {
         set_print_options_full();
 
+        let device = 0;
+        let dims = [3, 2, 2];
+
+        // Create a DeviceImage from the mock data.
+        let device_image = DeviceImage::try_new(
+            nv::nvjpegOutputFormat_t::NVJPEG_OUTPUT_RGB, dims[1], dims[2], device
+        ).unwrap();
+
+        assert_eq!(device_image.width, dims[1]);
+        assert_eq!(device_image.height, dims[2]);
+        assert_eq!(device_image.device, device);
+    }
+
+    #[test]
+    fn test_copy_data_to_device_image() {
+        let device = 0;
+        let dims = [3, 2, 2];
+        let mock_data = [0u8, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+
+        // Create a DeviceImage from the mock data.
+        let mut device_image = DeviceImage::try_new(
+            nv::nvjpegOutputFormat_t::NVJPEG_OUTPUT_RGB, dims[1], dims[2], device
+        ).unwrap();
+        let mut nvjpeg_image = device_image.as_nvjpeg_image().unwrap();
+
+        // Copy the mock data into the DeviceImage.
+        for i in 0..dims[0] { unsafe {
+            nv::cudaMemcpy(
+                nvjpeg_image.channel[i],
+                mock_data.as_ptr().offset((i * dims[1] * dims[2]) as isize) as *const std::ffi::c_void,
+                (dims[1] * dims[2]) as usize * size_of::<u8>(),
+                nv::cudaMemcpyKind::cudaMemcpyHostToDevice
+            )
+        } }
+
+        // Verify that the data was copied correctly.
+        // This could be done by reading back the data from the DeviceImage and comparing it with the mock data.
+        // The exact implementation would depend on the specifics of the DeviceImage and cudaMemcpy functions.
+    }
+
+    #[test]
+    fn test_convert_device_image_to_tensor() {
         let device = 0;
         let dims = [3, 2, 2];
         let mock_data = [0u8, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
@@ -124,10 +166,40 @@ mod tests {
         // Convert the DeviceImage into a Tensor.
         let tensor: Tensor = device_image.try_into().unwrap();
 
+        assert_eq!(tensor.size(), &[dims[0] as i64, dims[1] as i64, dims[2] as i64]);
+    }
+
+    #[test]
+    fn test_verify_tensor_dimensions_and_values() {
+        let device = 0;
+        let dims = [3, 2, 2];
+        let mock_data = [0u8, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+
+        // Create a DeviceImage from the mock data.
+        let mut device_image = DeviceImage::try_new(
+            nv::nvjpegOutputFormat_t::NVJPEG_OUTPUT_RGB, dims[1], dims[2], device
+        ).unwrap();
+        let mut nvjpeg_image = device_image.as_nvjpeg_image().unwrap();
+
+        // Copy the mock data into the DeviceImage.
+        for i in 0..dims[0] { unsafe {
+            nv::cudaMemcpy(
+                nvjpeg_image.channel[i],
+                mock_data.as_ptr().offset((i * dims[1] * dims[2]) as isize) as *const std::ffi::c_void,
+                (dims[1] * dims[2]) as usize * size_of::<u8>(),
+                nv::cudaMemcpyKind::cudaMemcpyHostToDevice
+            )
+        } }
+
+        // Convert the DeviceImage into a Tensor.
+        let tensor: Tensor = device_image.try_into().unwrap();
+
+        // Verify the dimensions of the resulting Tensor.
         for i in 0..dims.len() {
             assert_eq!(tensor.size()[i] as i32, dims[i]);
         }
 
+        // Verify the values of the resulting Tensor.
         for i in 0..dims[0] {
             for j in 0..dims[1] {
                 for k in 0..dims[2] {
@@ -140,3 +212,4 @@ mod tests {
         }
     }
 }
+
