@@ -17,21 +17,25 @@ on:
 permissions:
   contents: read
 
+env:
+  LIBTORCH_USE_PYTORCH: 1
+
 jobs:
   linux:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        target: [x86_64, armv7]
+        target: [x86_64]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
+      - run: pip install torch==2.0.0+cu118 --index-url https://download.pytorch.org/whl/cu118
       - uses: Jimver/cuda-toolkit@v0.2.10
         id: cuda-toolkit
         with:
-          cuda: '12.1.0'
+          cuda: '11.8.0'
           method: 'network'
           sub-packages: '["cudart", "nvjpeg"]'
       - name: Build wheels
@@ -53,10 +57,11 @@ jobs:
         with:
           python-version: '3.10'
           architecture: ${{ matrix.target }}
+      - run: pip install torch==2.0.0+cu118 --index-url https://download.pytorch.org/whl/cu118
       - uses: Jimver/cuda-toolkit@v0.2.10
         id: cuda-toolkit
         with:
-          cuda: '12.1.0'
+          cuda: '11.8.0'
           method: 'network'
           sub-packages: '["cudart", "nvjpeg"]'
       - name: Build wheels
@@ -80,20 +85,3 @@ jobs:
         with:
           name: wheels
           path: dist
-
-  release:
-    name: Release
-    runs-on: ubuntu-latest
-    if: "startsWith(github.ref, 'refs/tags/')"
-    needs: [linux, windows, sdist]
-    steps:
-      - uses: actions/download-artifact@v3
-        with:
-          name: wheels
-      - name: Publish to PyPI
-        uses: PyO3/maturin-action@v1
-        env:
-          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
-        with:
-          command: upload
-          args: --skip-existing *
