@@ -3,6 +3,7 @@ use pyo3::{PyObject, PyResult};
 mod decoder;
 mod allocators;
 pub(crate) mod nv;
+mod manager;
 
 /*
 #[pyclass(unsendable)]

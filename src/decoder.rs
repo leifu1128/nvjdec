@@ -1,67 +1,68 @@
 use std::os::raw::c_int;
 use color_eyre::eyre::{eyre, WrapErr};
-use pyo3::prelude::*;
 use crate::decoder::image::{DeviceImage};
+use crate::manager::Manager;
 use crate::nv;
-use crate::nv::{IntoResult, nvjpegHandle_t, nvjpegJpegState_t, NvjpegResult};
+use crate::nv::{IntoResult, nvjpegHandle_t, nvjpegJpegState_t, nvjpegOutputFormat_t, NvjpegResult};
 
 
 mod buffer;
 mod image;
 
-struct DecoderBackend {
-    backend: nv::nvjpegBackend_t,
-    handle: nv::nvjpegHandle_t,
-    state: nv::nvjpegJpegState_t,
-    device: usize,
+
+pub fn get_image_info(handle: nvjpegHandle_t, image: &'_[u8], length: usize) -> NvjpegResult<[i32; 3]> {
+    let mut dims: [i32; 3] = [0, 0, 0];
+    unsafe {
+        nv::nvjpegGetImageInfo(
+            handle,
+            image.as_ptr(),
+            length,
+            &mut dims[0],
+            std::ptr::null_mut(),
+            &mut dims[2],
+            &mut dims[1],
+        ).into_result()?;
+    }
+    Ok(dims)
 }
 
-impl DecoderBackend {
-    fn setup(backend: nv::nvjpegBackend_t, device: usize, flag: u32) -> NvjpegResult<()> {
-        let mut db = DecoderBackend{
-            backend,
-            handle: std::ptr::null_mut(),
-            state: std::ptr::null_mut(),
-            device,
-        };
+pub trait Decode {
+    type Input<'a>;
+    type Output;
+    fn init(&mut self, handle: nvjpegHandle_t, state: nvjpegJpegState_t) -> NvjpegResult<()>;
+    fn decode(&self, input: Self::Input<'_>, handle: nvjpegHandle_t, state: nvjpegJpegState_t) -> NvjpegResult<Self::Output>;
+}
 
+struct BatchDecoder {
+    batch_size: i32,
+    format: nvjpegOutputFormat_t,
+}
+
+impl BatchDecoder {
+    pub fn new(batch_size: i32, format: nvjpegOutputFormat_t) -> Self {
+        BatchDecoder { batch_size, format }
+    }
+}
+
+impl Decode for BatchDecoder {
+    type Input<'a> = Vec<&'a[u8]>;
+    type Output = Vec<DeviceImage>;
+
+    fn init(&mut self, handle: nvjpegHandle_t, state: nvjpegJpegState_t) -> NvjpegResult<()> {
         unsafe {
-            nv::cudaSetDevice(device as c_int).into_result()
-                .wrap_err("Failed to set device")?;
-            nv::nvjpegCreateEx(
-                backend,
-                std::ptr::null_mut(),
-                std::ptr::null_mut(),
-                flag,
-                &mut db.handle,
+            nv::nvjpegDecodeBatchedInitialize(
+                handle,
+                state,
+                self.batch_size,
+                1,
+                self.format,
             ).into_result()
-                .wrap_err("Failed to create handle")?;
-            nv::nvjpegJpegStateCreate(
-                db.handle,
-                &mut db.state,
-            ).into_result()
-                .wrap_err("Failed to create jpeg state")?;
+                .wrap_err("Failed to initialize decoder")?;
         }
         Ok(())
     }
 
-    fn teardown(&mut self) -> NvjpegResult<()> {
-        unsafe{
-            nv::cudaSetDevice(self.device as c_int).into_result()
-                .wrap_err("Failed to set device")?;
-            nv::nvjpegDestroy(self.handle).into_result()
-                .wrap_err("Failed to destroy handle")?;
-            nv::nvjpegJpegStateDestroy(self.state).into_result()
-                .wrap_err("Failed to destroy jpeg state")?;
-        }
-        Ok(())
+    fn decode(&self, input: Self::Input<'_>, handle: nvjpegHandle_t, state: nvjpegJpegState_t) -> NvjpegResult<Self::Output> {
+        unimplemented!()
     }
 }
-
-impl Drop for DecoderBackend {
-    fn drop(&mut self) {
-        self.teardown()
-            .wrap_err("Failed to teardown decoder").unwrap();
-    }
-}
-

@@ -23,8 +23,7 @@ fn gen_nv_bindings() {
         .derive_debug(true)
         .impl_debug(false)
         .derive_default(true)
-        .derive_partialeq(true)
-        .derive_eq(true)
+        .derive_copy(false)
         .impl_partialeq(true)
         .merge_extern_blocks(true)
         .generate_comments(false)
@@ -54,7 +53,7 @@ fn main() {
     println!("cargo:rerun-if-changed=src/decoder.rs");
     println!("cargo:rerun-if-changed=src/nv_custom.rs");
 
-    println!("cargo:rustc-link-search={}/lib/x64", env::var("CUDA_PATH").unwrap());
+    println!("cargo:rustc-link-search={}", env::var("CUDA_PATH").unwrap());
     println!("cargo:rustc-link-lib=dylib=cudart");
     println!("cargo:rustc-link-lib=dylib=nvjpeg");
 }
