@@ -1,4 +1,3 @@
-# nvjdec
-# Project is paused, we are switching to TPUs
+# nvjdec (project on hold)
 
 Rust API for nvjpeg decoding. The main goal is to add rust safety features to nvjpeg's decoder API.
